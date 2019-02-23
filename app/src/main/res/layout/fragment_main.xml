@@ -42,7 +42,9 @@
 
         <!--New Register-->
         <TextView
-            android:textColor="@android:color/black"
+            android:id="@+id/txtRegister"
+            android:clickable="true"
+            android:textColor="@color/colorAccent"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
