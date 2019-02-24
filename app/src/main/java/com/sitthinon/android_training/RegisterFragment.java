@@ -7,6 +7,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.StrictMode;
 import android.provider.MediaStore;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -20,8 +21,13 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.Toast;
 
+import java.io.File;
 import java.time.Instant;
+
+import it.sauronsoftware.ftp4j.FTPClient;
+import it.sauronsoftware.ftp4j.FTPDataTransferListener;
 
 
 /**
@@ -141,9 +147,73 @@ public class RegisterFragment extends Fragment {
             Log.d("24FebV1","Path ==>" + pathImageString);
             String nameImage = pathImageString.substring(pathImageString.lastIndexOf("/"));
             Log.d("24FebV1","Name ==>" + nameImage);
+
+            StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
+            StrictMode.setThreadPolicy(policy);
+
+            File file = new File(pathImageString);
+            FTPClient ftpClient = new FTPClient();
+
+            try {
+                ftpClient.connect("ftp.androidthai.in.th", 21);
+                ftpClient.login("ksu@androidthai.in.th","Abc12345");
+                ftpClient.changeDirectory("NoThingAll");
+                ftpClient.upload(file,new uploadListener());
+
+//                Update Database
+
+                AddUserThread addUserThread = new AddUserThread(getActivity());
+                addUserThread.execute(name, user, password, "https://www.androidthai.in.th/ksu/NoThingAll" + pathImageString);
+                String result = addUserThread.get();
+
+                if (Boolean.parseBoolean(result)) {
+                    getActivity().getSupportFragmentManager().popBackStack();
+
+                }
+
+
+            } catch (Exception e) {
+                e.printStackTrace();
+                try {
+                    ftpClient.disconnect(true);
+                } catch (Exception e1) {
+                    e1.printStackTrace();
+                }
+
+            }
+
+
         }//if
 
     }//check value
+
+    public class uploadListener implements FTPDataTransferListener {
+        @Override
+        public void started() {
+            Toast.makeText(getActivity(), "Start Upload", Toast.LENGTH_SHORT).show();
+        }
+
+        @Override
+        public void transferred(int i) {
+            Toast.makeText(getActivity(), "Continue Upload...", Toast.LENGTH_SHORT).show();
+        }
+
+        @Override
+        public void completed() {
+            Toast.makeText(getActivity(), "Completed Upload", Toast.LENGTH_SHORT).show();
+        }
+
+        @Override
+        public void aborted() {
+
+        }
+
+        @Override
+        public void failed() {
+
+        }
+    }
+
 
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
